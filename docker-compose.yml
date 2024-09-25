@@ -1,0 +1,11 @@
+#services:
+#  app:
+#    build:
+#      context: .
+#    container_name: stockpy_app
+#    volumes:
+#      - ./src:/app/src  # Mount source code for easy development without rebuilding
+#      - ./assets:/app/assets
+#    environment:
+#      - PYTHONUNBUFFERED=1
+#    command: python /app/src/main.py

@@ -19,8 +19,8 @@ This project requires:
 1. Download StockPy from its [GitHub repository](https://github.com/jcausse/stockpy) and open a Terminal inside it.
 2. Run the included installation script:
 ```bash:
-chmod a+x install.sh
-./install.sh
+chmod a+x scripts/ubuntu/install.sh
+scripts/ubuntu/install.sh
 ```
 
 # Running StockPy
@@ -28,5 +28,5 @@ chmod a+x install.sh
 ## Ubuntu
 To run SockPy after performing the [installation](#installation-steps-ubuntu), just run the `run.sh` script:
 ```bash:
-./run.sh
+scripts/ubuntu/run.sh
 ```

@@ -6,7 +6,7 @@ app = QApplication(sys.argv)
 
 # Create a main window
 window = QWidget()
-window.setWindowTitle('Hello World')
+window.setWindowTitle('StockPy')
 
 # Create a label and set it as the content of the window
 label = QLabel('Hello, PyQt5!', parent=window)

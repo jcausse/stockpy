@@ -6,16 +6,16 @@ Created by [Juan Ignacio Causse](https://github.com/jcausse). [Email me](mailto:
 
 # Installation
 
-## Linux
+## Ubuntu
 
-### Requirements (Linux)
+### Requirements (Ubuntu)
 This project requires:
 1. A version of the Stockfish chess engine for your operating system.
 2. Python 3.10.
 3. libxcb-cursor0 package.
 4. PyQt library.
 
-### Installation Steps (Linux)
+### Installation Steps (Ubuntu)
 1. Download StockPy from its [GitHub repository](https://github.com/jcausse/stockpy) and open a Terminal inside it.
 2. Run the included installation script:
 ```bash:
@@ -25,8 +25,8 @@ chmod a+x install.sh
 
 # Running StockPy
 
-## Linux
-To run SockPy after performing the [installation](#installation-steps-linux), just run the `run.sh` script:
+## Ubuntu
+To run SockPy after performing the [installation](#installation-steps-ubuntu), just run the `run.sh` script:
 ```bash:
 ./run.sh
 ```

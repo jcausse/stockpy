@@ -43,5 +43,8 @@ class MainWindow(QMainWindow):
         self.move_list = MoveList()
         right_layout.addWidget(self.move_list)
         
+        # Connect move list signals
+        self.move_list.moveSelected.connect(self.board.jump_to_move)
+        
         # TODO: Add engine control widgets
         # TODO: Add analysis widget

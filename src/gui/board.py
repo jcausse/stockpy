@@ -115,6 +115,10 @@ class ChessBoard(QWidget):
         # Initialize python-chess board
         self.board = chess.Board()
         
+        # Store game history (list of moves)
+        self.moves = []
+        self.current_position = 0
+        
         # Set up the grid layout
         self.layout = QGridLayout()
         self.layout.setSpacing(0)
@@ -172,18 +176,19 @@ class ChessBoard(QWidget):
             # Get SAN before pushing the move
             san = self.board.san(move)
             
+            # Store the move
+            self.moves.append(move)
+            self.current_position = len(self.moves)
+            
             # Make the move
             self.board.push(move)
             self.update_display()
             
-            # Get the move list from the main window
+            # Update move list
             main_window = self.window()
             if main_window and hasattr(main_window, 'move_list'):
-                main_window.move_list.add_move(len(self.board.move_stack), san)
-            else:
-                print("Move list not found!")
+                main_window.move_list.add_move(len(self.moves), san)
         else:
-            # If illegal, refresh the display to reset pieces
             self.update_display()
             
     def _load_piece_images(self) -> dict:
@@ -248,3 +253,21 @@ class ChessBoard(QWidget):
         square_size = size // 8
         for square in self.squares.values():
             square.setFixedSize(square_size, square_size)
+        
+    def jump_to_move(self, move_index: int):
+        """
+        Jump to the position after the specified move.
+        
+        Args:
+            move_index (int): 0-based index of the move to jump to
+        """
+        # Reset board to initial position
+        self.board.reset()
+        
+        # Replay moves up to the selected position
+        for i in range(move_index + 1):
+            if i < len(self.moves):
+                self.board.push(self.moves[i])
+        
+        self.current_position = move_index + 1
+        self.update_display()

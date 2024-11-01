@@ -41,11 +41,16 @@ class ChessSquare(QWidget):
         color = QColor("#B58863") if self.is_dark else QColor("#F0D9B5")
         painter.fillRect(event.rect(), color)
         
-    def setPiece(self, pixmap: QPixmap | None = None) -> None:
-        """Set or remove a piece on this square."""
-        if pixmap is not None:
+    def setPiece(self, pixmap: QPixmap = None):
+        """
+        Set or remove a piece on this square.
+        
+        Args:
+            pixmap (QPixmap, optional): Piece image to display, or None to remove piece
+        """
+        if pixmap and not pixmap.isNull():
             scaled_pixmap = pixmap.scaled(
-                self.size(),
+                self.size() * 0.8,  # Make piece slightly smaller than square
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation
             )
@@ -98,10 +103,8 @@ class ChessSquare(QWidget):
     def resizeEvent(self, event) -> None:
         """Handle square resizing."""
         super().resizeEvent(event)
-        size = min(self.width(), self.height())
-        self.setFixedSize(size, size)
-        self.piece_label.setGeometry(0, 0, size, size)
-        if self.piece_label.pixmap():
+        self.piece_label.setGeometry(0, 0, self.width(), self.height())
+        if self.piece_label.pixmap() and not self.piece_label.pixmap().isNull():
             current_pixmap = self.piece_label.pixmap().copy()
             self.setPiece(current_pixmap)
 
@@ -195,7 +198,7 @@ class ChessBoard(QWidget):
         """Load all piece PNG images."""
         piece_images = {}
         assets_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'pieces')
-        
+
         # Mapping of piece symbols to filenames
         pieces = {
             'P': 'white_pawn.png',
@@ -215,9 +218,13 @@ class ChessBoard(QWidget):
         for symbol, filename in pieces.items():
             path = os.path.join(assets_dir, filename)
             if os.path.exists(path):
-                piece_images[symbol] = QPixmap(path)
+                pixmap = QPixmap(path)
+                if not pixmap.isNull():
+                    piece_images[symbol] = pixmap
+                else:
+                    print(f"Error loading piece image: {path}")
             else:
-                print(f"Warning: Could not find piece image: {path}")
+                print(f"Piece image not found: {path}")
                 
         return piece_images
         

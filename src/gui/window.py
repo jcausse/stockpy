@@ -1,0 +1,47 @@
+"""
+Main window implementation for StockPy.
+"""
+
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt6.QtCore import Qt
+from .board import ChessBoard
+from .moveList import MoveList
+
+class MainWindow(QMainWindow):
+    """
+    Main window class for the StockPy application.
+    
+    This window serves as the container for all other widgets and handles
+    the main application layout.
+    """
+    
+    def __init__(self):
+        """Initialize the main window and set up the UI."""
+        super().__init__(None)
+        
+        # Set window properties
+        self.setWindowTitle('StockPy')
+        self.setMinimumSize(800, 600)
+        
+        # Create central widget and layout
+        central_widget = QWidget(None)
+        self.setCentralWidget(central_widget)
+        
+        # Create main layout
+        main_layout = QHBoxLayout(central_widget)
+        
+        # Create and add chess board
+        self.board = ChessBoard()
+        main_layout.addWidget(self.board, stretch=2)
+        
+        # Create right panel for analysis
+        right_panel = QWidget(central_widget)
+        right_layout = QVBoxLayout(right_panel)
+        main_layout.addWidget(right_panel, stretch=1)
+        
+        # Add move list to right panel
+        self.move_list = MoveList()
+        right_layout.addWidget(self.move_list)
+        
+        # TODO: Add engine control widgets
+        # TODO: Add analysis widget

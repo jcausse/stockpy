@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
         
         # Set window properties
         self.setWindowTitle('StockPy')
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(1000, 800)
         
         # Create central widget and layout
         central_widget = QWidget(None)

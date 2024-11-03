@@ -12,7 +12,7 @@ import os
 class ChessSquare(QWidget):
     """A single square on the chess board."""
     
-    def __init__(self, is_dark: bool, square: chess.Square, parent=None):
+    def __init__(self, is_dark: bool, square: chess.Square, label: str = '', parent=None):
         """
         Initialize a chess square.
         
@@ -24,6 +24,7 @@ class ChessSquare(QWidget):
         super().__init__(parent)
         self.is_dark = is_dark
         self.square = square
+        self.label = label
         self.setMinimumSize(50, 50)
         self.setAcceptDrops(True)
         
@@ -40,6 +41,14 @@ class ChessSquare(QWidget):
         painter = QPainter(self)
         color = QColor("#B58863") if self.is_dark else QColor("#F0D9B5")
         painter.fillRect(event.rect(), color)
+        if self.label != '':
+            font = painter.font()
+            font.setPointSize(12)
+            painter.setFont(font)
+            painter.setPen(QColor("black"))
+            painter.drawText(event.rect(), (
+                Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft
+                ), self.label)
         
     def setPiece(self, pixmap: QPixmap = None):
         """
@@ -133,7 +142,12 @@ class ChessBoard(QWidget):
             for file in range(8):
                 square = chess.square(file, rank)
                 is_dark = (rank + file) % 2 == 0
-                square_widget = ChessSquare(is_dark, square)
+                square_label = ''
+                if rank == 0:
+                    square_label += chr(ord('a') + file)
+                if file == 0:
+                    square_label += str(rank + 1)
+                square_widget = ChessSquare(is_dark, square, square_label)
                 self.layout.addWidget(square_widget, 7 - rank, file)
                 self.squares[square] = square_widget
         

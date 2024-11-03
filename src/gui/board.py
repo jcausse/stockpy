@@ -132,7 +132,7 @@ class ChessBoard(QWidget):
         for rank in range(8):
             for file in range(8):
                 square = chess.square(file, rank)
-                is_dark = (rank + file) % 2 == 1
+                is_dark = (rank + file) % 2 == 0
                 square_widget = ChessSquare(is_dark, square)
                 self.layout.addWidget(square_widget, 7 - rank, file)
                 self.squares[square] = square_widget

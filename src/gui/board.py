@@ -2,142 +2,50 @@
 Chess board widget implementation for StockPy.
 """
 
-from PyQt6.QtWidgets import QWidget, QGridLayout, QLabel, QApplication, QDialog
-from PyQt6.QtCore import Qt, QMimeData, QPoint
-from PyQt6.QtGui import QPainter, QColor, QPixmap, QDrag, QMouseEvent
+from PyQt6.QtWidgets import QWidget, QGridLayout, QDialog
+from PyQt6.QtGui import QPixmap
 from .promotionDialog import PromotionDialog
 import chess
 import os
+from core.stockfish import StockfishEngine
+from .square import ChessSquare
 
-class ChessSquare(QWidget):
-    """A single square on the chess board."""
-    
-    def __init__(self, is_dark: bool, square: chess.Square, label: str = '', parent=None):
-        """
-        Initialize a chess square.
-        
-        Args:
-            is_dark (bool): Whether this is a dark square
-            square (chess.Square): The chess square this widget represents
-            parent (QWidget): Parent widget
-        """
-        super().__init__(parent)
-        self.is_dark = is_dark
-        self.square = square
-        self.label = label
-        self.setMinimumSize(50, 50)
-        self.setAcceptDrops(True)
-        
-        # Create and configure the piece label
-        self.piece_label = QLabel(self)
-        self.piece_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.piece_label.setGeometry(0, 0, self.width(), self.height())
-        
-        # Track drag state
-        self.drag_start_position = None
-        
-    def paintEvent(self, event) -> None:
-        """Paint the square background."""
-        painter = QPainter(self)
-        color = QColor("#B58863") if self.is_dark else QColor("#F0D9B5")
-        painter.fillRect(event.rect(), color)
-        if self.label != '':
-            font = painter.font()
-            font.setPointSize(12)
-            painter.setFont(font)
-            painter.setPen(QColor("black"))
-            painter.drawText(event.rect(), (
-                Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft
-                ), self.label)
-        
-    def setPiece(self, pixmap: QPixmap = None):
-        """
-        Set or remove a piece on this square.
-        
-        Args:
-            pixmap (QPixmap, optional): Piece image to display, or None to remove piece
-        """
-        if pixmap and not pixmap.isNull():
-            scaled_pixmap = pixmap.scaled(
-                self.size() * 0.8,  # Make piece slightly smaller than square
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation
-            )
-            self.piece_label.setPixmap(scaled_pixmap)
-        else:
-            self.piece_label.clear()
-            
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        """Handle mouse press events to start drag operations."""
-        if event.button() == Qt.MouseButton.LeftButton and self.piece_label.pixmap():
-            self.drag_start_position = event.pos()
-            
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        """Handle mouse move events for drag operations."""
-        if not (event.buttons() & Qt.MouseButton.LeftButton and self.drag_start_position):
-            return
-            
-        # Check if the drag threshold has been met
-        if (event.pos() - self.drag_start_position).manhattanLength() < QApplication.startDragDistance():
-            return
-            
-        # Start the drag operation
-        drag = QDrag(self)
-        mime_data = QMimeData()
-        mime_data.setText(str(self.square))  # Store the source square
-        drag.setMimeData(mime_data)
-        
-        # Create a pixmap for the drag cursor
-        pixmap = self.piece_label.pixmap()
-        if pixmap:
-            drag.setPixmap(pixmap)
-            drag.setHotSpot(QPoint(pixmap.width()//2, pixmap.height()//2))
-        
-        # Execute the drag
-        drag.exec(Qt.DropAction.MoveAction)
-        
-    def dragEnterEvent(self, event) -> None:
-        """Handle drag enter events."""
-        if event.mimeData().hasText():
-            event.acceptProposedAction()
-            
-    def dropEvent(self, event) -> None:
-        """Handle drop events."""
-        source_square = int(event.mimeData().text())
-        if self.parent():
-            # Notify the board of the move
-            self.parent().try_move(source_square, self.square)
-        event.acceptProposedAction()
-            
-    def resizeEvent(self, event) -> None:
-        """Handle square resizing."""
-        super().resizeEvent(event)
-        self.piece_label.setGeometry(0, 0, self.width(), self.height())
-        if self.piece_label.pixmap() and not self.piece_label.pixmap().isNull():
-            current_pixmap = self.piece_label.pixmap().copy()
-            self.setPiece(current_pixmap)
 
 class ChessBoard(QWidget):
     """Chess board widget that displays pieces and handles moves."""
     
-    def __init__(self, parent=None):
+    def __init__(self, stockfish_path: str | None = None, parent=None):
         """Initialize the chess board."""
         super().__init__(parent)
         
         # Initialize python-chess board
         self.board = chess.Board()
         
-        # Store game history (list of moves)
-        self.moves = []
-        self.current_position = 0
+        # Initialize Stockfish engine (if path provided)
+        self.engine = None
+        if stockfish_path is not None:
+            try:
+                self.engine = StockfishEngine(stockfish_path)
+                self.engine.start()
+            except FileNotFoundError as e:
+                print(f"Error initializing Stockfish engine: {e}")
+                self.engine.quit()
+                self.engine = None
+        
+        # Store suggested move squares for highlighting
+        self.suggested_from = None
+        self.suggested_to = None
         
         # Set up the grid layout
         self.layout = QGridLayout()
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.moves = []
+        self.current_position = 0
         
         # Create squares
-        self.squares = {}
+        self.squares: dict[chess.Square, ChessSquare] = {}
         for rank in range(8):
             for file in range(8):
                 square = chess.square(file, rank)
@@ -205,6 +113,9 @@ class ChessBoard(QWidget):
             main_window = self.window()
             if main_window and hasattr(main_window, 'move_list'):
                 main_window.move_list.add_move(len(self.moves), san)
+
+            # Update engine suggestion
+            self.update_engine_suggestion(time_limit=3.0)
         else:
             self.update_display()
             
@@ -242,18 +153,23 @@ class ChessBoard(QWidget):
                 
         return piece_images
         
-    def update_display(self):
+    def update_display(self) -> None:
         """Update the board display to match the current position."""
         for square in chess.SQUARES:
             piece = self.board.piece_at(square)
             square_widget = self.squares[square]
             
-            if piece:
-                pixmap = self.piece_images.get(piece.symbol())
-                square_widget.setPiece(pixmap)
+            # Update piece
+            if piece and piece.symbol() in self.piece_images:
+                square_widget.setPiece(self.piece_images[piece.symbol()])
             else:
                 square_widget.setPiece(None)
-                
+
+            # Update suggestion highlight
+            square_widget.setSuggested(
+                square == self.suggested_from or square == self.suggested_to
+            )
+        
     def resizeEvent(self, event):
         """Handle board resizing to maintain square proportions."""
         super().resizeEvent(event)
@@ -290,5 +206,24 @@ class ChessBoard(QWidget):
             if i < len(self.moves):
                 self.board.push(self.moves[i])
         
+        self.moves = self.moves[:move_index + 1]
+
         self.current_position = move_index + 1
         self.update_display()
+
+    def update_engine_suggestion(self, time_limit: float = 1.0):
+        """Get and display engine's suggested move."""
+        if self.engine is None:
+            return
+        best_move = self.engine.get_best_move(self.board, time_limit)
+        print(f"Suggested move: {best_move}")
+        if best_move:
+            self.suggested_from = best_move.from_square
+            self.suggested_to = best_move.to_square
+            self.update_display()
+
+    def closeEvent(self, event):
+        """Handle the window close event."""
+        if self.engine is not None:
+            self.engine.quit()
+        super().closeEvent(event)

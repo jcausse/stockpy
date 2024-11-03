@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout
 from PyQt6.QtCore import Qt
 from .board import ChessBoard
 from .moveList import MoveList
+import os
 
 class MainWindow(QMainWindow):
     """
@@ -31,7 +32,7 @@ class MainWindow(QMainWindow):
         main_layout = QHBoxLayout(central_widget)
         
         # Create and add chess board
-        self.board = ChessBoard()
+        self.board = ChessBoard(stockfish_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "stockfish", "stockfish-ubuntu-x86-64-avx2")))
         main_layout.addWidget(self.board, stretch=2)
         
         # Create right panel for analysis

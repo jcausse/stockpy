@@ -227,3 +227,33 @@ class ChessBoard(QWidget):
         if self.engine is not None:
             self.engine.quit()
         super().closeEvent(event)
+
+
+    ##########################
+    ### Board Menu Actions ###
+    ##########################
+
+    # TODO: FIX
+    def import_pgn(self, pgn_path: str) -> None:
+        """Import a PGN file and update the board."""
+        with open(pgn_path, 'r') as pgn_file:
+            game = chess.pgn.read_game(pgn_file)
+            self.board = game.board()
+            for move in game.mainline_moves():
+                self.board.push(move)
+            self.update_display()
+            self.update_position_evaluation()
+
+    # TODO: FIX
+    def export_pgn(self, pgn_path: str) -> None:
+        """Export the current position as a PGN file."""
+        game = chess.pgn.Game.from_board(self.board)
+        with open(pgn_path, 'w') as pgn_file:
+            exporter = chess.pgn.FileExporter(pgn_file)
+            game.accept(exporter)
+
+
+    def reset(self) -> None:
+        self.board.reset()
+        self.update_display()
+        self.update_engine_suggestion()

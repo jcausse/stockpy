@@ -2,8 +2,8 @@
 Main window implementation for StockPy.
 """
 
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFileDialog
+from PyQt6.QtGui import QAction
 from .board import ChessBoard
 from .moveList import MoveList
 import os
@@ -46,6 +46,40 @@ class MainWindow(QMainWindow):
         
         # Connect move list signals
         self.move_list.moveSelected.connect(self.board.jump_to_move)
+
+        ########################
+        ### MENU BAR ACTIONS ###
+        ########################
+
+        # Import / Export PGN
+        import_action = QAction("Import PGN", self)
+        import_action.triggered.connect(self.import_pgn)
+        export_action = QAction("Export PGN", self)
+        export_action.triggered.connect(self.export_pgn)
+
+        # Clear board
+        reset_board_action = QAction("Reset", self)
+        reset_board_action.triggered.connect(self.board.reset)
+
+        # Add actions to the menu
+        board_menu = self.menuBar().addMenu("Board")
+        board_menu.addAction(import_action)
+        board_menu.addAction(export_action)
+        board_menu.addSeparator()
+        board_menu.addAction(reset_board_action)
+        
         
         # TODO: Add engine control widgets
         # TODO: Add analysis widget
+
+    def import_pgn(self):
+        """Open a file dialog to import a PGN file."""
+        pgn_path, _ = QFileDialog.getOpenFileName(self, "Open PGN", "", "PGN Files (*.pgn)")
+        if pgn_path:
+            self.board.import_pgn(pgn_path)
+
+    def export_pgn(self):
+        """Open a file dialog to export the current position as a PGN file."""
+        pgn_path, _ = QFileDialog.getSaveFileName(self, "Save PGN", "", "PGN Files (*.pgn)")
+        if pgn_path:
+            self.board.export_pgn(pgn_path)

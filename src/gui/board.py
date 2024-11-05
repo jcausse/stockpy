@@ -240,8 +240,8 @@ class ChessBoard(QWidget):
         """Handle the window close event."""
         if self.engine is not None:
             self.engine.quit()
+            self.engine = None
         super().closeEvent(event)
-
 
     ##########################
     ### Board Menu Actions ###

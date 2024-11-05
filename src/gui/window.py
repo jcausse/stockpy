@@ -98,3 +98,10 @@ class MainWindow(QMainWindow):
         self.toggle_engine_suggestions_action.setText(
             "Disable suggestions" if is_enabled else "Enable suggestions"
         )
+
+    def closeEvent(self, event):
+        """Handle the window close event."""
+        if self.board and self.board.engine:
+            self.board.engine.quit()
+            self.board.engine = None
+        super().closeEvent(event)

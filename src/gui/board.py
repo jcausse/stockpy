@@ -41,9 +41,13 @@ class ChessBoard(QWidget):
         self.layout.setSpacing(0)
         self.layout.setContentsMargins(0, 0, 0, 0)
 
+        # Store moves
         self.moves = []
         self.current_position = 0
         
+        # Enable or disable engine suggestions
+        self.engine_suggestions_enabled = True
+
         # Create squares
         self.squares: dict[chess.Square, ChessSquare] = {}
         for rank in range(8):
@@ -62,6 +66,7 @@ class ChessBoard(QWidget):
         self.setLayout(self.layout)
         self.piece_images = self._load_piece_images()
         self.setMinimumSize(400, 400)
+        self.update_engine_suggestion()
         self.update_display()
         
     def try_move(self, from_square: chess.Square, to_square: chess.Square):
@@ -112,12 +117,13 @@ class ChessBoard(QWidget):
             # Update move list
             main_window = self.window()
             if main_window and hasattr(main_window, 'move_list'):
-                main_window.move_list.add_move(len(self.moves), san)
+                main_window.move_list.add_move(san)
 
             # Update engine suggestion
-            self.update_engine_suggestion(time_limit=3.0)
-        else:
-            self.update_display()
+            self.update_engine_suggestion()
+
+        # Update display to show changes
+        self.update_display()
             
     def _load_piece_images(self) -> dict:
         """Load all piece PNG images."""
@@ -211,16 +217,24 @@ class ChessBoard(QWidget):
         self.current_position = move_index + 1
         self.update_display()
 
-    def update_engine_suggestion(self, time_limit: float = 1.0):
-        """Get and display engine's suggested move."""
-        if self.engine is None:
+    def update_engine_suggestion(self, time_limit: float = 3.0):
+        """
+        Get the move suggested by the engine and store it for later highlighting.
+        """
+        # Reset suggested move
+        self.suggested_from = None
+        self.suggested_to = None
+
+        # Return if engine is not enabled
+        if self.engine is None or not self.engine_suggestions_enabled:
             return
+        
+        # Get the suggested move
         best_move = self.engine.get_best_move(self.board, time_limit)
         print(f"Suggested move: {best_move}")
         if best_move:
             self.suggested_from = best_move.from_square
             self.suggested_to = best_move.to_square
-            self.update_display()
 
     def closeEvent(self, event):
         """Handle the window close event."""
@@ -252,8 +266,17 @@ class ChessBoard(QWidget):
             exporter = chess.pgn.FileExporter(pgn_file)
             game.accept(exporter)
 
-
     def reset(self) -> None:
         self.board.reset()
-        self.update_display()
         self.update_engine_suggestion()
+        self.update_display()
+
+    ###########################
+    ### Engine Menu Actions ###
+    ###########################
+
+    def toggle_engine_suggestions(self) -> None:
+        """Toggle engine suggestions on or off."""
+        self.engine_suggestions_enabled = not self.engine_suggestions_enabled
+        self.update_engine_suggestion()
+        self.update_display()

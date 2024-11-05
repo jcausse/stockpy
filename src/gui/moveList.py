@@ -73,6 +73,9 @@ class MoveList(QWidget):
             }}
         """)
         layout.addWidget(self.list_widget)
+
+        # Create move counter
+        self.move_counter = 1
         
         # Connect item click signal
         self.list_widget.itemClicked.connect(self._on_item_clicked)
@@ -80,7 +83,7 @@ class MoveList(QWidget):
         # Set size policy
         self.setMinimumWidth(200)
 
-    def add_move(self, move_number: int, move_san: str):
+    def add_move(self, move_san: str):
         """
         Add a move to the list.
         
@@ -88,9 +91,9 @@ class MoveList(QWidget):
             move_number (int): The move number
             move_san (str): The move in Standard Algebraic Notation
         """
-        if move_number % 2 == 1:
+        if self.move_counter % 2 == 1:
             # White's move
-            item_text = f"{(move_number + 1) // 2}. {move_san}"
+            item_text = f"{(self.move_counter + 1) // 2}. {move_san}"
         else:
             # Black's move - append to previous item
             prev_item = self.list_widget.item(self.list_widget.count() - 1)
@@ -99,10 +102,11 @@ class MoveList(QWidget):
                 prev_item.setText(item_text)
                 return
             else:
-                item_text = f"{move_number // 2}... {move_san}"
+                item_text = f"{self.move_counter // 2}... {move_san}"
         
         self.list_widget.addItem(item_text)
         self.list_widget.scrollToBottom()
+        self.move_counter += 1
         
     def _on_item_clicked(self, item):
         """Handle item click events."""
@@ -127,3 +131,8 @@ class MoveList(QWidget):
             move_index = (move_number * 2) - 2
         
         self.moveSelected.emit(move_index)
+
+    def reset(self):
+        """Reset the move list."""
+        self.list_widget.clear()
+        self.move_counter = 1

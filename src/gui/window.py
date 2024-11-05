@@ -52,25 +52,28 @@ class MainWindow(QMainWindow):
         ########################
 
         # Import / Export PGN
-        import_action = QAction("Import PGN", self)
-        import_action.triggered.connect(self.import_pgn)
-        export_action = QAction("Export PGN", self)
-        export_action.triggered.connect(self.export_pgn)
+        self.import_action = QAction("Import PGN", self)
+        self.import_action.triggered.connect(self.import_pgn)
+        self.export_action = QAction("Export PGN", self)
+        self.export_action.triggered.connect(self.export_pgn)
 
         # Clear board
-        reset_board_action = QAction("Reset", self)
-        reset_board_action.triggered.connect(self.board.reset)
+        self.reset_board_action = QAction("Reset", self)
+        self.reset_board_action.triggered.connect(self.reset_board)
+
+        # Toggle engine suggestions
+        self.toggle_engine_suggestions_action = QAction("Disable suggestions", self)
+        self.toggle_engine_suggestions_action.triggered.connect(self.toggle_engine_suggestions)
 
         # Add actions to the menu
-        board_menu = self.menuBar().addMenu("Board")
-        board_menu.addAction(import_action)
-        board_menu.addAction(export_action)
-        board_menu.addSeparator()
-        board_menu.addAction(reset_board_action)
-        
-        
-        # TODO: Add engine control widgets
-        # TODO: Add analysis widget
+        self.board_menu = self.menuBar().addMenu("Board")
+        self.board_menu.addAction(self.import_action)
+        self.board_menu.addAction(self.export_action)
+        self.board_menu.addSeparator()
+        self.board_menu.addAction(self.reset_board_action)
+
+        self.engine_menu = self.menuBar().addMenu("Engine")
+        self.engine_menu.addAction(self.toggle_engine_suggestions_action)
 
     def import_pgn(self):
         """Open a file dialog to import a PGN file."""
@@ -83,3 +86,15 @@ class MainWindow(QMainWindow):
         pgn_path, _ = QFileDialog.getSaveFileName(self, "Save PGN", "", "PGN Files (*.pgn)")
         if pgn_path:
             self.board.export_pgn(pgn_path)
+
+    def reset_board(self):
+        self.move_list.reset()
+        self.board.reset()
+
+    def toggle_engine_suggestions(self):
+        """Toggle engine suggestions and update menu text."""
+        self.board.toggle_engine_suggestions()
+        is_enabled = self.board.engine_suggestions_enabled
+        self.toggle_engine_suggestions_action.setText(
+            "Disable suggestions" if is_enabled else "Enable suggestions"
+        )

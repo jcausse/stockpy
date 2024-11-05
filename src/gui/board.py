@@ -295,6 +295,7 @@ class ChessBoard(QWidget):
 
         # Update the engine suggestion and display
         self.update_engine_suggestion()
+        self.update_evaluation_bar()
         self.update_display()
 
     def export_pgn(self, pgn_path: str) -> None:

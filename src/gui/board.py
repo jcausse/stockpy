@@ -173,6 +173,12 @@ class ChessBoard(QWidget):
         
     def update_display(self) -> None:
         """Update the board display to match the current position."""
+        # Find king in check (if any)
+        king_square_in_check = None
+        if self.board.is_check():
+            king_color = self.board.turn
+            king_square_in_check = self.board.king(king_color)
+
         for square in chess.SQUARES:
             piece = self.board.piece_at(square)
             square_widget = self.squares[square]
@@ -187,6 +193,9 @@ class ChessBoard(QWidget):
             square_widget.setSuggested(
                 square == self.suggested_from or square == self.suggested_to
             )
+            
+            # Update check highlight
+            square_widget.setCheck(square == king_square_in_check)
         
     def resizeEvent(self, event):
         """Handle board resizing to maintain square proportions."""

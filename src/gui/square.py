@@ -31,28 +31,37 @@ class ChessSquare(QWidget):
         self.drag_start_position = None
         
         self.suggested = False
+        self.in_check = False
         
     def paintEvent(self, event) -> None:
         """Paint the square background."""
         painter = QPainter(self)
-        color = QColor("#B58863") if self.is_dark else QColor("#F0D9B5")
-        painter.fillRect(event.rect(), color)
-        if self.label != '':
-            font = painter.font()
-            font.setPointSize(12)
-            painter.setFont(font)
-            painter.setPen(QColor("black"))
-            painter.drawText(event.rect(), (
-                Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft
-                ), self.label)
         
+        # Base square color
+        if self.is_dark:
+            base_color = QColor("#B58863")  # Dark squares
+        else:
+            base_color = QColor("#F0D9B5")  # Light squares
+            
+        # Draw base square
+        painter.fillRect(0, 0, self.width(), self.height(), base_color)
+        
+        # Draw check highlight
+        if self.in_check:
+            check_color = QColor("#FF0000")  # Red for check
+            check_color.setAlpha(100)  # Make it semi-transparent
+            painter.fillRect(0, 0, self.width(), self.height(), check_color)
+            
         # Draw suggestion highlight
         if self.suggested:
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            suggest_color = QColor(0, 255, 0, 40)  # Semi-transparent green
-            painter.setBrush(QBrush(suggest_color))
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawRect(self.rect())
+            suggest_color = QColor("#00FF00")  # Green for suggestions
+            suggest_color.setAlpha(100)  # Make it semi-transparent
+            painter.fillRect(0, 0, self.width(), self.height(), suggest_color)
+            
+        # Draw square label if present
+        if self.label:
+            painter.setPen(QColor("#000000"))
+            painter.drawText(5, self.height() - 5, self.label)
         
     def setPiece(self, pixmap: QPixmap = None):
         """
@@ -125,4 +134,10 @@ class ChessSquare(QWidget):
         """Set whether this square is part of the suggested move."""
         if self.suggested != suggested:
             self.suggested = suggested
+            self.update()
+
+    def setCheck(self, in_check: bool):
+        """Set whether this square contains a king in check."""
+        if self.in_check != in_check:
+            self.in_check = in_check
             self.update()

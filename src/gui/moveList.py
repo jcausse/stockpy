@@ -86,28 +86,27 @@ class MoveList(QWidget):
     def add_move(self, move_san: str):
         """
         Add a move to the list.
-        
         Args:
-            move_number (int): The move number
             move_san (str): The move in Standard Algebraic Notation
         """
         if self.move_counter % 2 == 1:
-            # White's move
+            # White's move - create new item
             item_text = f"{(self.move_counter + 1) // 2}. {move_san}"
+            self.list_widget.addItem(item_text)
         else:
             # Black's move - append to previous item
             prev_item = self.list_widget.item(self.list_widget.count() - 1)
             if prev_item:
                 item_text = prev_item.text() + f"  {move_san}"
                 prev_item.setText(item_text)
-                return
             else:
+                # Handle case where black moves first (shouldn't happen in normal chess)
                 item_text = f"{self.move_counter // 2}... {move_san}"
+                self.list_widget.addItem(item_text)
         
-        self.list_widget.addItem(item_text)
         self.list_widget.scrollToBottom()
         self.move_counter += 1
-        
+     
     def _on_item_clicked(self, item):
         """Handle item click events."""
         # Calculate which move was clicked based on the item's row

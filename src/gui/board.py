@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QWidget, QGridLayout, QDialog
 from PyQt6.QtGui import QPixmap
 from .promotionDialog import PromotionDialog
 import chess
+from chess import pgn as PGN
 import os
 from core.stockfish import StockfishEngine
 from .square import ChessSquare
@@ -231,7 +232,7 @@ class ChessBoard(QWidget):
         
         # Get the suggested move
         best_move = self.engine.get_best_move(self.board, time_limit)
-        print(f"Suggested move: {best_move}")
+        print(f"DEBUG: Suggested move: {best_move}")
         if best_move:
             self.suggested_from = best_move.from_square
             self.suggested_to = best_move.to_square
@@ -247,25 +248,42 @@ class ChessBoard(QWidget):
     ### Board Menu Actions ###
     ##########################
 
-    # TODO: FIX
     def import_pgn(self, pgn_path: str) -> None:
         """Import a PGN file and update the board."""
-        with open(pgn_path, 'r') as pgn_file:
-            game = chess.pgn.read_game(pgn_file)
-            self.board = game.board()
-            for move in game.mainline_moves():
-                self.board.push(move)
-            self.update_display()
-            self.update_position_evaluation()
 
-    # TODO: FIX
+        # Read the PGN file
+        print(f'DEBUG: Importing PGN file: {pgn_path}')
+        with open(pgn_path, 'r') as pgn_file:
+            game = PGN.read_game(pgn_file)
+
+        # Update the board and move list
+        self.board = None           # Garbage collect the current board
+        self.board = game.board()
+
+        move_list_found = False
+        main_window = self.window()
+        if main_window and hasattr(main_window, 'move_list'):
+            move_list_found = True
+            main_window.move_list.reset()
+
+        for move in game.mainline_moves():
+            if move_list_found:
+                san = self.board.san(move)
+                main_window.move_list.add_move(san)
+            self.board.push(move)
+
+        # Update the engine suggestion
+        self.update_engine_suggestion()
+        self.update_display()
+
     def export_pgn(self, pgn_path: str) -> None:
         """Export the current position as a PGN file."""
+        print(f'DEBUG: Exporting PGN file: {pgn_path}')
         game = chess.pgn.Game.from_board(self.board)
         with open(pgn_path, 'w') as pgn_file:
-            exporter = chess.pgn.FileExporter(pgn_file)
+            exporter = PGN.FileExporter(pgn_file)
             game.accept(exporter)
-
+    
     def reset(self) -> None:
         self.board.reset()
         self.update_engine_suggestion()

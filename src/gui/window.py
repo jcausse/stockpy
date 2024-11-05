@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFil
 from PyQt6.QtGui import QAction, QIcon
 from .board import ChessBoard
 from .moveList import MoveList
+from .evaluationBar import EvaluationBar
 import os
 
 class MainWindow(QMainWindow):
@@ -36,10 +37,13 @@ class MainWindow(QMainWindow):
         # Create main layout
         main_layout = QHBoxLayout(central_widget)
         
-        # Create and add chess board
-        self.board = ChessBoard(stockfish_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "stockfish", "stockfish-ubuntu-x86-64-avx2")))
-        main_layout.addWidget(self.board, stretch=2)
-        
+        # Create left panel for board and evaluation
+        left_panel = QWidget(central_widget)
+        left_layout = QVBoxLayout(left_panel)
+        left_layout.setSpacing(0)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(left_panel, stretch=2)
+
         # Create right panel for analysis
         right_panel = QWidget(central_widget)
         right_layout = QVBoxLayout(right_panel)
@@ -48,6 +52,24 @@ class MainWindow(QMainWindow):
         # Add move list to right panel
         self.move_list = MoveList()
         right_layout.addWidget(self.move_list)
+        
+        # Add evaluation bar to left panel
+        self.eval_bar = EvaluationBar()
+        left_layout.addWidget(self.eval_bar)
+
+
+        # Create resource getters
+        resource_getters = {
+            'eval_bar': self.get_evaluation_bar,
+            'move_list': self.get_move_list
+        }
+        
+        # Create and add chess board to left panel
+        self.board = ChessBoard(
+            stockfish_path=os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "stockfish", "stockfish-ubuntu-x86-64-avx2")),
+            resource_getters=resource_getters
+        )
+        left_layout.addWidget(self.board)
         
         # Connect move list signals
         self.move_list.moveSelected.connect(self.board.jump_to_move)
@@ -80,6 +102,10 @@ class MainWindow(QMainWindow):
         self.engine_menu = self.menuBar().addMenu("Engine")
         self.engine_menu.addAction(self.toggle_engine_suggestions_action)
 
+    ##########################
+    ### MENU BAR CALLBACKS ###
+    ##########################
+
     def import_pgn(self):
         """Open a file dialog to import a PGN file."""
         pgn_path, _ = QFileDialog.getOpenFileName(self, "Open PGN", "", "PGN Files (*.pgn)")
@@ -110,3 +136,15 @@ class MainWindow(QMainWindow):
             self.board.engine.quit()
             self.board.engine = None
         super().closeEvent(event)
+
+    ########################
+    ### RESOURCE GETTERS ###
+    ########################
+
+    def get_evaluation_bar(self) -> EvaluationBar:
+        """Get the evaluation bar."""
+        return self.eval_bar
+
+    def get_move_list(self) -> MoveList:
+        """Get the move list."""
+        return self.move_list

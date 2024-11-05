@@ -2,6 +2,7 @@
 Chess board widget implementation for StockPy.
 """
 
+from typing import Callable, Any
 from PyQt6.QtWidgets import QWidget, QGridLayout, QDialog
 from PyQt6.QtGui import QPixmap
 from .promotionDialog import PromotionDialog
@@ -10,14 +11,19 @@ from chess import pgn as PGN
 import os
 from core.stockfish import StockfishEngine
 from .square import ChessSquare
+from .evaluationBar import EvaluationBar
+from .moveList import MoveList
 
 
 class ChessBoard(QWidget):
     """Chess board widget that displays pieces and handles moves."""
     
-    def __init__(self, stockfish_path: str | None = None, parent=None):
+    def __init__(self, stockfish_path: str, resource_getters: dict[str, Callable[[], Any]], parent=None):
         """Initialize the chess board."""
         super().__init__(parent)
+
+        # Save resource getters
+        self.resource_getters = resource_getters
         
         # Initialize python-chess board
         self.board = chess.Board()
@@ -45,9 +51,6 @@ class ChessBoard(QWidget):
         # Store moves
         self.moves = []
         self.current_position = 0
-        
-        # Enable or disable engine suggestions
-        self.engine_suggestions_enabled = True
 
         # Create squares
         self.squares: dict[chess.Square, ChessSquare] = {}
@@ -63,6 +66,13 @@ class ChessBoard(QWidget):
                 square_widget = ChessSquare(is_dark, square, square_label)
                 self.layout.addWidget(square_widget, 7 - rank, file)
                 self.squares[square] = square_widget
+
+
+        # Enable or disable evaluation Bar
+        self.engine_evaluation_enabled = True
+
+        # Enable or disable engine suggestions
+        self.engine_suggestions_enabled = True
         
         self.setLayout(self.layout)
         self.piece_images = self._load_piece_images()
@@ -116,12 +126,13 @@ class ChessBoard(QWidget):
             self.update_display()
             
             # Update move list
-            main_window = self.window()
-            if main_window and hasattr(main_window, 'move_list'):
-                main_window.move_list.add_move(san)
+            self.resource_getters['move_list']().add_move(san)
 
             # Update engine suggestion
             self.update_engine_suggestion()
+
+            # Update evaluation bar
+            self.update_evaluation_bar()
 
         # Update display to show changes
         self.update_display()
@@ -236,6 +247,13 @@ class ChessBoard(QWidget):
         if best_move:
             self.suggested_from = best_move.from_square
             self.suggested_to = best_move.to_square
+    
+    def update_evaluation_bar(self, time_limit: float = 0.1) -> None:
+        """Evaluate the current position."""
+        if self.engine is not None and self.engine_evaluation_enabled:
+            evaluation = self.engine.get_evaluation(self.board, time_limit)
+            self.resource_getters['eval_bar']().setEvaluation(evaluation)
+            print(f"DEBUG: Evaluation set: {evaluation}")
 
     def closeEvent(self, event):
         """Handle the window close event."""
@@ -259,20 +277,14 @@ class ChessBoard(QWidget):
         # Update the board and move list
         self.board = None           # Garbage collect the current board
         self.board = game.board()
-
-        move_list_found = False
-        main_window = self.window()
-        if main_window and hasattr(main_window, 'move_list'):
-            move_list_found = True
-            main_window.move_list.reset()
+        
+        self.resource_getters['move_list']().reset()
 
         for move in game.mainline_moves():
-            if move_list_found:
-                san = self.board.san(move)
-                main_window.move_list.add_move(san)
-            self.board.push(move)
+            self.resource_getters['move_list']().add_move(self.board.san(move))       # Add moves to move list
+            self.board.push(move)                                                   # Add moves to board
 
-        # Update the engine suggestion
+        # Update the engine suggestion and display
         self.update_engine_suggestion()
         self.update_display()
 

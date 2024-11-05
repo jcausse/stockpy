@@ -1,24 +1,32 @@
-# import sys
-# from PyQt6.QtWidgets import QApplication, QLabel, QWidget
-#
-# # Initialize the application
-# app = QApplication(sys.argv)
-#
-# # Create a main window
-# window = QWidget()
-# window.setWindowTitle('Hello World')
-#
-# # Create a label and set it as the content of the window
-# label = QLabel('Hello, PyQt5!', parent=window)
-# label.move(50, 50)
-#
-# # Set the window size
-# window.setGeometry(100, 100, 280, 80)
-#
-# # Show the window
-# window.show()
-#
-# # Run the application's event loop
-# sys.exit(app.exec())
+"""
+StockPy - A multi-platform Python3 frontend for Stockfish.
 
-print('Hello from Docker!')
+This module serves as the entry point for the StockPy application.
+"""
+
+import sys
+from PyQt6.QtWidgets import QApplication
+from gui.window import MainWindow
+
+def main():
+    """
+    Main entry point of the application.
+    
+    Creates the QApplication instance, sets up the main window,
+    and starts the event loop.
+    """
+    # Initialize the Qt application
+    app = QApplication(sys.argv)
+    app.setApplicationName("StockPy")
+    app.setApplicationDisplayName("StockPy")
+    app.setDesktopFileName("StockPy")
+    
+    # Create and show the main window
+    window = MainWindow()
+    window.show()
+    
+    # Start the event loop
+    sys.exit(app.exec())
+
+if __name__ == "__main__":
+    main()

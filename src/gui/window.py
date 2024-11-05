@@ -88,9 +88,11 @@ class MainWindow(QMainWindow):
         self.reset_board_action = QAction("Reset", self)
         self.reset_board_action.triggered.connect(self.reset_board)
 
-        # Toggle engine suggestions
+        # Toggle engine suggestions and evaluation bar
         self.toggle_engine_suggestions_action = QAction("Disable suggestions", self)
         self.toggle_engine_suggestions_action.triggered.connect(self.toggle_engine_suggestions)
+        self.toggle_evaluation_bar_action = QAction("Disable evaluation", self)
+        self.toggle_evaluation_bar_action.triggered.connect(self.toggle_evaluation_bar)
 
         # Add actions to the menu
         self.board_menu = self.menuBar().addMenu("Board")
@@ -101,6 +103,7 @@ class MainWindow(QMainWindow):
 
         self.engine_menu = self.menuBar().addMenu("Engine")
         self.engine_menu.addAction(self.toggle_engine_suggestions_action)
+        self.engine_menu.addAction(self.toggle_evaluation_bar_action)
 
     ##########################
     ### MENU BAR CALLBACKS ###
@@ -120,6 +123,7 @@ class MainWindow(QMainWindow):
 
     def reset_board(self):
         self.move_list.reset()
+        self.eval_bar.reset()
         self.board.reset()
 
     def toggle_engine_suggestions(self):
@@ -128,6 +132,14 @@ class MainWindow(QMainWindow):
         is_enabled = self.board.engine_suggestions_enabled
         self.toggle_engine_suggestions_action.setText(
             "Disable suggestions" if is_enabled else "Enable suggestions"
+        )
+
+    def toggle_evaluation_bar(self):
+        """Toggle the evaluation bar."""
+        self.board.toggle_evaluation_bar()
+        is_enabled = self.board.engine_evaluation_enabled
+        self.toggle_evaluation_bar_action.setText(
+            "Disable evaluation" if is_enabled else "Enable evaluation"
         )
 
     def closeEvent(self, event):

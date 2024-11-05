@@ -310,3 +310,11 @@ class ChessBoard(QWidget):
         self.engine_suggestions_enabled = not self.engine_suggestions_enabled
         self.update_engine_suggestion()
         self.update_display()
+
+    def toggle_evaluation_bar(self) -> None:
+        """Toggle the evaluation bar on or off."""
+        self.engine_evaluation_enabled = not self.engine_evaluation_enabled
+        if self.engine_evaluation_enabled:
+            self.update_evaluation_bar()
+        else:
+            self.resource_getters['eval_bar']().setDisabled()

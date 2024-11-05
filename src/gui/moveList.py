@@ -59,7 +59,7 @@ class MoveList(QWidget):
             QListWidget {{
                 color: {text_color};
                 background-color: {'#8B6B4F' if dark_theme else '#E6C9A3'};
-                font-size: 12px;
+                font-size: 14px;
                 border: 1px solid {'#6B4F33' if dark_theme else '#D4B894'};
                 border-radius: 4px;
             }}

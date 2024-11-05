@@ -42,7 +42,7 @@ class StockfishEngine:
         try:
             info = self.engine.analyse(board, chess.engine.Limit(time=time_limit))
             if 'score' in info:
-                score = info['score'].relative
+                score = info['score'].white()
                 # Convert mate scores to high numerical values
                 if score.is_mate():
                     # Use ±100 for mate scores, with sign indicating which side has mate

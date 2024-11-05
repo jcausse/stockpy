@@ -3,7 +3,7 @@ Main window implementation for StockPy.
 """
 
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QFileDialog
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QIcon
 from .board import ChessBoard
 from .moveList import MoveList
 import os
@@ -23,6 +23,11 @@ class MainWindow(QMainWindow):
         # Set window properties
         self.setWindowTitle('StockPy')
         self.setMinimumSize(1000, 800)
+
+        # Set window icon
+        icon_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'pieces', 'white_pawn.png')
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
         
         # Create central widget and layout
         central_widget = QWidget(None)

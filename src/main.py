@@ -17,6 +17,9 @@ def main():
     """
     # Initialize the Qt application
     app = QApplication(sys.argv)
+    app.setApplicationName("StockPy")
+    app.setApplicationDisplayName("StockPy")
+    app.setDesktopFileName("StockPy")
     
     # Create and show the main window
     window = MainWindow()
